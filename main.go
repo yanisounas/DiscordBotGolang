@@ -45,11 +45,12 @@ func main() {
 }
 
 func ready(s *discordgo.Session, r *discordgo.Ready) {
-	user := s.State.User
+	user := r.User
+
 	fmt.Printf("Bot informations:\nID: %s\nUsername: %s#%s\nGuilds: %d\n\n\n\n",
 		user.ID,
 		user.Username,
 		user.Discriminator,
-		len(s.State.Guilds))
+		len(r.Guilds))
 	fmt.Println(user.Username + " is running. CTRL+C to exit")
 }

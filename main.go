@@ -1,6 +1,12 @@
 package main
 
 import (
+	"GoDiscordBot/Database"
+	"fmt"
+)
+
+/*
+import (
 	"GoDiscordBot/Bot"
 	"GoDiscordBot/Commands"
 	"fmt"
@@ -14,6 +20,7 @@ import (
 func main() {
 	environment, err := godotenv.Read()
 	if err != nil {
+		fmt.Println("can't read environment variables, ", err)
 		return
 	}
 
@@ -41,7 +48,11 @@ func main() {
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
-	bot.Close()
+	err = bot.Close()
+	if err != nil {
+		fmt.Println("Problem while closing bot, ", err)
+		return
+	}
 }
 
 func ready(s *discordgo.Session, r *discordgo.Ready) {
@@ -53,4 +64,14 @@ func ready(s *discordgo.Session, r *discordgo.Ready) {
 		user.Discriminator,
 		len(r.Guilds))
 	fmt.Println(user.Username + " is running. CTRL+C to exit")
+}
+*/
+
+func main() {
+	err := Database.Setup("localhost", "root", "", "GoTest")
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 }

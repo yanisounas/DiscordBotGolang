@@ -7,7 +7,7 @@ import (
 type (
 	Bot struct {
 		session *discordgo.Session
-		prefix  string "!"
+		prefix  string
 		router  *CommandRouter
 
 		User     *discordgo.User
@@ -53,13 +53,13 @@ func (bot *Bot) GetPrefix() string {
 	return bot.prefix
 }
 
-func New(token string) (bot *Bot, err error) {
+func New(token string, prefix string) (bot *Bot, err error) {
 	session, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return nil, err
 	}
 
-	bot = &(Bot{session: session})
+	bot = &(Bot{session: session, prefix: prefix})
 	bot.router = NewRouter(bot)
 
 	return

@@ -1,12 +1,6 @@
 package main
 
 import (
-	"GoDiscordBot/Database"
-	"fmt"
-)
-
-/*
-import (
 	"GoDiscordBot/Bot"
 	"GoDiscordBot/Commands"
 	"fmt"
@@ -24,7 +18,11 @@ func main() {
 		return
 	}
 
-	bot, err := Bot.New(environment["TOKEN"])
+	if len(environment["PREFIX"]) == 0 {
+		environment["PREFIX"] = ">"
+	}
+
+	bot, err := Bot.New(environment["TOKEN"], environment["PREFIX"])
 	bot.SetPrefix(environment["PREFIX"])
 
 	if err != nil {
@@ -64,14 +62,4 @@ func ready(s *discordgo.Session, r *discordgo.Ready) {
 		user.Discriminator,
 		len(r.Guilds))
 	fmt.Println(user.Username + " is running. CTRL+C to exit")
-}
-*/
-
-func main() {
-	err := Database.Setup("localhost", "root", "", "GoTest")
-
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
 }

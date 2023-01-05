@@ -40,8 +40,11 @@ func (ctx *Context) GetArgs() []string {
 }
 
 func (ctx *Context) GetArg(index int) string {
-	//TODO: Check index
-	return ctx.args[index]
+	if len(ctx.args) > index {
+		return ctx.args[index]
+	}
+
+	return ""
 }
 
 func NewContext(session *discordgo.Session, message *discordgo.MessageCreate, command *Command, args []string) (ctx *Context) {

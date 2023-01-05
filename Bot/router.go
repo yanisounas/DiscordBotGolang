@@ -1,6 +1,7 @@
 package Bot
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"strings"
 )
@@ -33,11 +34,13 @@ func (router *CommandRouter) MessageCreate(s *discordgo.Session, m *discordgo.Me
 
 	commandName, args := ParseCommand(m.Content[1:])
 	command := router.commands[commandName]
-
-	//TODO: Check if command exists
-
 	ctx := NewContext(s, m, command, args)
-	command.commandCallback(ctx)
+
+	if command != nil {
+		command.commandCallback(ctx)
+	}
+
+	ctx.Reply(fmt.Sprintf("Invalid command: %s", commandName))
 }
 
 func (router *CommandRouter) Close() {

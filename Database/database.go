@@ -29,10 +29,6 @@ type (
 var instance *Database
 
 func GetDatabase(opts *Options) (error, *Database) {
-	if instance != nil {
-		return nil, instance
-	}
-
 	if instance == nil {
 		lock.Lock()
 		defer lock.Unlock()
@@ -68,6 +64,6 @@ func Setup(host string, username string, password string, dbName string) (err er
 		instance = nil
 	}
 
-	err, _ = GetDatabase(&(Options{Host: host, Username: username, Password: password, DbName: dbName}))
+	err, _ = GetDatabase(&Options{Host: host, Username: username, Password: password, DbName: dbName})
 	return
 }

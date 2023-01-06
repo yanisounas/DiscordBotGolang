@@ -34,13 +34,18 @@ func (router *CommandRouter) MessageCreate(s *discordgo.Session, m *discordgo.Me
 
 	commandName, args := ParseCommand(m.Content[1:])
 	command := router.commands[commandName]
-	ctx := NewContext(s, m, command, args)
+	ctx := NewContext(s, m, router, command, args)
 
 	if command != nil {
 		command.commandCallback(ctx)
+		return
 	}
 
 	ctx.Reply(fmt.Sprintf("Invalid command: %s", commandName))
+}
+
+func (router *CommandRouter) Commands() map[string]*Command {
+	return router.commands
 }
 
 func (router *CommandRouter) Close() {

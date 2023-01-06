@@ -1,85 +1,119 @@
 package Bot
 
 import (
-	"fmt"
+	"errors"
 	"github.com/bwmarrin/discordgo"
-	"time"
+	"reflect"
 )
 
 type (
 	Context struct {
-		session *discordgo.Session
-		message *discordgo.MessageCreate
-		router  *CommandRouter
-
-		Author *discordgo.User
-		User   *discordgo.User
-
-		command *Command
-		args    []string
+		Session    *discordgo.Session
+		Message    *discordgo.MessageCreate
+		router     *CommandRouter
+		Author     *discordgo.User
+		User       *discordgo.User
+		EmbedMaker *EmbedMaker
+		command    *Command
+		args       []string
+		message    interface{}
 	}
 )
 
-func (ctx *Context) Send(message string) (*discordgo.Message, error) {
-	return ctx.session.ChannelMessageSend(ctx.message.ChannelID, message)
-}
-
-func (ctx *Context) Reply(message string) (*discordgo.Message, error) {
-	return ctx.session.ChannelMessageSendReply(ctx.message.ChannelID,
-		message,
-		&(discordgo.MessageReference{MessageID: ctx.message.ID, ChannelID: ctx.message.ChannelID, GuildID: ctx.message.GuildID}))
-}
-
-func (ctx *Context) Embed(embed *discordgo.MessageEmbed) (*discordgo.Message, error) {
-	return ctx.session.ChannelMessageSendEmbed(ctx.message.ChannelID, embed)
-}
-
-func (ctx *Context) embed() (*discordgo.Message, error) {
-	fmt.Println("Embed")
-	embed := &discordgo.MessageEmbed{
-		Author: &discordgo.MessageEmbedAuthor{
-			Name:    ctx.User.Username,
-			URL:     "https://google.com",
-			IconURL: ctx.User.AvatarURL("1024"),
-		},
-		Color:       0xba000d, // Red
-		Description: "This is a discordgo embed",
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "I am a field",
-				Value:  "I am a value",
-				Inline: true,
-			},
-			{
-				Name:   "I am a second field",
-				Value:  "I am a value",
-				Inline: true,
-			},
-		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: ctx.User.AvatarURL("2048"),
-		},
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: ctx.User.AvatarURL("2048"),
-		},
-		Timestamp: time.Now().Format(time.RFC3339), // Discord wants ISO8601; RFC3339 is an extension of ISO8601 and should be completely compatible.
-		Title:     "I am an Embed",
+func (ctx *Context) Send() (*discordgo.Message, error) {
+	if reflect.TypeOf(ctx.message) == reflect.TypeOf(&discordgo.MessageEmbed{}) {
+		return ctx.RawEmbed(ctx.EmbedMaker.UseSetting().Get())
+	} else if reflect.TypeOf(ctx.message) == reflect.TypeOf("") {
+		return ctx.SendMessage(ctx.message.(string))
 	}
 
-	msg, err := ctx.session.ChannelMessageSendEmbed(ctx.message.ChannelID, embed)
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
+	return nil, errors.New("unknown error")
+}
+
+func (ctx *Context) Reply() (*discordgo.Message, error) {
+	ref := &discordgo.MessageReference{MessageID: ctx.Message.ID, ChannelID: ctx.Message.ChannelID, GuildID: ctx.Message.GuildID}
+	if reflect.TypeOf(ctx.message) == reflect.TypeOf(&discordgo.MessageEmbed{}) {
+		return ctx.RawEmbedReply(ctx.EmbedMaker.UseSetting().Get(), ref)
+	} else if reflect.TypeOf(ctx.message) == reflect.TypeOf("") {
+		return ctx.SendReply(ctx.message.(string), ref)
 	}
-	return msg, nil
+
+	return nil, errors.New("unknown error")
 }
 
-func (ctx *Context) Session() *discordgo.Session {
-	return ctx.session
+func (ctx *Context) SendMessage(message string) (*discordgo.Message, error) {
+	return ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, message)
 }
 
-func (ctx *Context) Message() *discordgo.MessageCreate {
-	return ctx.message
+func (ctx *Context) SendReply(message string, reference *discordgo.MessageReference) (*discordgo.Message, error) {
+	return ctx.Session.ChannelMessageSendReply(ctx.Message.ChannelID, message, reference)
+}
+
+func (ctx *Context) RawEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, error) {
+	return ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
+}
+
+func (ctx *Context) RawEmbedReply(embed *discordgo.MessageEmbed, reference *discordgo.MessageReference) (*discordgo.Message, error) {
+	return ctx.Session.ChannelMessageSendEmbedReply(ctx.Message.ChannelID, embed, reference)
+}
+
+func (ctx *Context) PrepareMessage(message string) *Context {
+	ctx.message = message
+	return ctx
+}
+
+func (ctx *Context) PrepareEmbed() *Context {
+	ctx.EmbedMaker.Setting("author", &discordgo.MessageEmbedAuthor{Name: ctx.User.Username, IconURL: ctx.User.AvatarURL("1024")})
+	ctx.EmbedMaker.Setting("color", 0xba000d)
+	ctx.EmbedMaker.Setting("timestamp", "now")
+	ctx.message = &discordgo.MessageEmbed{}
+	return ctx
+}
+
+func (ctx *Context) Title(title string) *Context {
+	ctx.EmbedMaker.Title(title)
+	return ctx
+}
+
+func (ctx *Context) Description(desc string) *Context {
+	ctx.EmbedMaker.Description(desc)
+	return ctx
+}
+
+func (ctx *Context) Image(image *discordgo.MessageEmbedImage) *Context {
+	ctx.EmbedMaker.Image(image)
+	return ctx
+}
+
+func (ctx *Context) Thumbnail(thumbnail *discordgo.MessageEmbedThumbnail) *Context {
+	ctx.EmbedMaker.Thumbnail(thumbnail)
+	return ctx
+}
+
+func (ctx *Context) Field(name string, value string) *Context {
+	ctx.EmbedMaker.Field(name, value)
+	return ctx
+}
+
+func (ctx *Context) InlineField(name string, value string) *Context {
+	ctx.EmbedMaker.InlineField(name, value)
+	return ctx
+}
+
+func (ctx *Context) Fields(fields ...struct {
+	Name  string
+	Value string
+}) *Context {
+	ctx.EmbedMaker.Fields(fields...)
+	return ctx
+}
+
+func (ctx *Context) InlineFields(fields ...struct {
+	Name  string
+	Value string
+}) *Context {
+	ctx.EmbedMaker.InlineFields(fields...)
+	return ctx
 }
 
 func (ctx *Context) Router() *CommandRouter {
@@ -100,11 +134,12 @@ func (ctx *Context) GetArg(index int) string {
 
 func NewContext(session *discordgo.Session, message *discordgo.MessageCreate, router *CommandRouter, command *Command, args []string) (ctx *Context) {
 	return &(Context{
-		session: session,
-		message: message,
-		router:  router,
-		User:    session.State.User,
-		Author:  message.Author,
-		command: command,
-		args:    args})
+		Session:    session,
+		Message:    message,
+		router:     router,
+		User:       session.State.User,
+		Author:     message.Author,
+		EmbedMaker: NewEmbedMaker(&EmbedSettings{}),
+		command:    command,
+		args:       args})
 }

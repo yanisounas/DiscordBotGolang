@@ -16,8 +16,20 @@ type (
 	}
 )
 
+//TODO: Make a shorthand bot.Session().AddHandler(): bot.On("ready", callback)
+
 func (bot *Bot) Session() *discordgo.Session {
 	return bot.session
+}
+
+func (bot *Bot) Handler(handler interface{}) func() {
+	return bot.session.AddHandler(handler)
+}
+
+func (bot *Bot) Handlers(handlers ...interface{}) {
+	for _, handler := range handlers {
+		bot.session.AddHandler(handler)
+	}
 }
 
 func (bot *Bot) Open() (err error) {

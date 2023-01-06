@@ -41,7 +41,7 @@ func (router *CommandRouter) MessageCreate(s *discordgo.Session, m *discordgo.Me
 		return
 	}
 
-	ctx.Reply(fmt.Sprintf("Invalid command: %s", commandName))
+	ctx.PrepareMessage(fmt.Sprintf("Invalid command: %s", commandName)).Reply()
 }
 
 func (router *CommandRouter) Commands() map[string]*Command {

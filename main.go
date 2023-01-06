@@ -18,7 +18,7 @@ func main() {
 	log.Print("Reading environment variables... ")
 	environment, err := godotenv.Read()
 	if err != nil {
-		color.Red("✘\nCan't read environment variables, ", err)
+		color.Red("✘\nCan't read environment variables, %s", err)
 		os.Exit(0)
 		return
 	}
@@ -30,10 +30,9 @@ func main() {
 
 	log.Print("Creating discord session... ")
 	bot, err := Bot.New(environment["TOKEN"], environment["PREFIX"])
-	bot.SetPrefix(environment["PREFIX"])
 
 	if err != nil {
-		color.Red("✘\nCan't create discord session, ", err)
+		color.Red("✘\nCan't create discord session, %s", err)
 		return
 	}
 	color.Green("✔")
@@ -43,15 +42,14 @@ func main() {
 	color.Green("\u2714")
 
 	log.Print("Adding handler... ")
-	bot.Session().AddHandler(bot.MessageCreate)
-	bot.Session().AddHandler(ready)
+	bot.Handlers(bot.MessageCreate, ready)
 	color.Green("✔")
 
 	log.Print("Opening web socket... ")
 	err = bot.Open()
 
 	if err != nil {
-		color.Red("✘\nCan't open websocket, ", err)
+		color.Red("✘\nCan't open websocket, %s", err)
 		return
 	}
 	color.Green("✔")
@@ -63,7 +61,7 @@ func main() {
 
 	err = bot.Close()
 	if err != nil {
-		color.Red("✘\nA unknown problem occurred while closing bot, ", err)
+		color.Red("✘\nA unknown problem occurred while closing bot, %s", err)
 		return
 	}
 }
